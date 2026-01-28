@@ -1,0 +1,9 @@
+com\ornaflora\model\Order$PaymentMethod.class
+com\ornaflora\model\Product.class
+com\ornaflora\model\User$UserRole.class
+com\ornaflora\model\Order$OrderStatus.class
+com\ornaflora\model\OrderItem.class
+com\ornaflora\model\Address.class
+com\ornaflora\model\Order.class
+com\ornaflora\model\User.class
+com\ornaflora\dto\CartItemRequest.class

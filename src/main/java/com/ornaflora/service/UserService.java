@@ -1,0 +1,135 @@
+package com.ornaflora.service;
+
+import com.ornaflora.dto.LoginRequest;
+import com.ornaflora.dto.LoginResponse;
+import com.ornaflora.dto.SignupRequest;
+import com.ornaflora.dto.UserDTO;
+import com.ornaflora.model.User;
+import com.ornaflora.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class UserService {
+
+    private final UserRepository userRepository;
+
+    public LoginResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        if (!user.getIsActive()) {
+            throw new RuntimeException("User account is inactive");
+        }
+
+        return LoginResponse.builder()
+                .message("Login successful")
+                .user(convertToDTO(user))
+                .role(user.getRole().toString())
+                .userId(user.getId())
+                .build();
+    }
+
+    public UserDTO signup(SignupRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .name(request.getName())
+                .phone(request.getPhone())
+                .role(User.UserRole.CUSTOMER)
+                .isActive(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
+    public UserDTO getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return convertToDTO(user);
+    }
+
+    public UserDTO getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return convertToDTO(user);
+    }
+
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (userDTO.getName() != null) {
+            user.setName(userDTO.getName());
+        }
+        if (userDTO.getPhone() != null) {
+            user.setPhone(userDTO.getPhone());
+        }
+        if (userDTO.getAvatarUrl() != null) {
+            user.setAvatarUrl(userDTO.getAvatarUrl());
+        }
+
+        User updatedUser = userRepository.save(user);
+        return convertToDTO(updatedUser);
+    }
+
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setIsActive(false);
+        userRepository.save(user);
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAllActiveUsers().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDTO> getAllAdmins() {
+        return userRepository.findAllAdmins().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getPassword().equals(oldPassword)) {
+            throw new RuntimeException("Old password is incorrect");
+        }
+
+        user.setPassword(newPassword);
+        userRepository.save(user);
+    }
+
+    private UserDTO convertToDTO(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .phone(user.getPhone())
+                .avatarUrl(user.getAvatarUrl())
+                .isActive(user.getIsActive())
+                .role(user.getRole().toString())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+}

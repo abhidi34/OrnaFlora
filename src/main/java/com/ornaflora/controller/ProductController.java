@@ -1,7 +1,7 @@
 package com.ornaflora.controller;
 
-import com.ornaflora.dto.ProductDTO;
-import com.ornaflora.dto.ProductRequest;
+import com.ornaflora.dto.*;
+import com.ornaflora.service.ImageService;
 import com.ornaflora.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,12 +11,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/products")
 @RequiredArgsConstructor
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"})
 public class ProductController {
 
     private final ProductService productService;
+    private final ImageService imageService;
 
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
@@ -93,6 +94,47 @@ public class ProductController {
         try {
             productService.updateStock(id, stock);
             return ResponseEntity.ok("Stock updated successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    /**
+     * Upload and attach images to a product
+     */
+    @PostMapping("/{id}/images")
+    public ResponseEntity<ProductDTO> uploadProductImages(@PathVariable Long id, @RequestBody ImageUploadRequest request) {
+        try {
+            ImageUploadResponse uploadResponse = imageService.processImages(request);
+            ProductDTO product = productService.addImagesToProduct(id, uploadResponse.getImageUrls());
+            return ResponseEntity.ok(product);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * Replace all product images
+     */
+    @PutMapping("/{id}/images")
+    public ResponseEntity<ProductDTO> replaceProductImages(@PathVariable Long id, @RequestBody ImageUploadRequest request) {
+        try {
+            ImageUploadResponse uploadResponse = imageService.processImages(request);
+            ProductDTO product = productService.replaceProductImages(id, uploadResponse.getImageUrls());
+            return ResponseEntity.ok(product);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * Get images for a product
+     */
+    @GetMapping("/{id}/images")
+    public ResponseEntity<List<String>> getProductImages(@PathVariable Long id) {
+        try {
+            List<String> images = productService.getProductImages(id);
+            return ResponseEntity.ok(images);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }

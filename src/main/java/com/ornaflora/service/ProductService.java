@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -134,5 +135,45 @@ public class ProductService {
         } catch (Exception e) {
             return List.of();
         }
+    }
+
+    /**
+     * Add images to an existing product (append to existing images)
+     */
+    public ProductDTO addImagesToProduct(Long id, List<String> newImages) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        List<String> existingImages = convertJsonToList(product.getImageUrls());
+        List<String> allImages = new ArrayList<>(existingImages);
+        
+        if (newImages != null) {
+            allImages.addAll(newImages);
+        }
+
+        product.setImageUrls(convertListToJson(allImages));
+        Product updatedProduct = productRepository.save(product);
+        return convertToDTO(updatedProduct);
+    }
+
+    /**
+     * Replace all images for a product
+     */
+    public ProductDTO replaceProductImages(Long id, List<String> newImages) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        product.setImageUrls(convertListToJson(newImages));
+        Product updatedProduct = productRepository.save(product);
+        return convertToDTO(updatedProduct);
+    }
+
+    /**
+     * Get all images for a product
+     */
+    public List<String> getProductImages(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+        return convertJsonToList(product.getImageUrls());
     }
 }

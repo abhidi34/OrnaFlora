@@ -11,10 +11,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "cart_items", indexes = {
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_product_id", columnList = "product_id")
-})
+@Table(name = "cart_items")
 @Data
 @Builder
 @NoArgsConstructor

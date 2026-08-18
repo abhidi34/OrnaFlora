@@ -1,5 +1,6 @@
 package com.ornaflora.service;
 
+import com.ornaflora.auth.JwtUtil;
 import com.ornaflora.dto.LoginRequest;
 import com.ornaflora.dto.LoginResponse;
 import com.ornaflora.dto.SignupRequest;
@@ -7,24 +8,32 @@ import com.ornaflora.dto.UserDTO;
 import com.ornaflora.model.User;
 import com.ornaflora.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class UserService {
+    @Autowired
+    private UserRepository userRepository;
 
-    private final UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public LoginResponse login(LoginRequest request) {
+
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
 
@@ -32,14 +41,15 @@ public class UserService {
             throw new RuntimeException("User account is inactive");
         }
 
+        String token = jwtUtil.generateToken(user.getEmail());
+
         return LoginResponse.builder()
                 .message("Login successful")
-                .user(convertToDTO(user))
-                .role(user.getRole().toString())
-                .userId(user.getId())
+                .token(token)
                 .build();
     }
 
+    // Update the signup method to hash the password
     public UserDTO signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
@@ -47,10 +57,29 @@ public class UserService {
 
         User user = User.builder()
                 .email(request.getEmail())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword())) // Hash the password
                 .name(request.getName())
                 .phone(request.getPhone())
                 .role(User.UserRole.CUSTOMER)
+                .isActive(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        return convertToDTO(savedUser);
+    }
+
+    // Add this method after the signup method
+    public UserDTO signupAdmin(SignupRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already registered");
+        }
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .phone(request.getPhone())
+                .role(User.UserRole.ADMIN) // Set as ADMIN
                 .isActive(true)
                 .build();
 
@@ -111,11 +140,11 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!user.getPassword().equals(oldPassword)) {
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new RuntimeException("Old password is incorrect");
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
 

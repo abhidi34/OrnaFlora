@@ -13,10 +13,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users", indexes = {
-    @Index(name = "idx_email", columnList = "email", unique = true),
-    @Index(name = "idx_role", columnList = "role")
-})
+@Table(name = "users")
 @Data
 @Builder
 @NoArgsConstructor

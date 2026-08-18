@@ -11,10 +11,7 @@ import org.springframework.data.annotation.CreatedDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "addresses", indexes = {
-    @Index(name = "idx_user_id", columnList = "user_id"),
-    @Index(name = "idx_is_default", columnList = "is_default")
-})
+@Table(name = "addresses")
 @Data
 @Builder
 @NoArgsConstructor

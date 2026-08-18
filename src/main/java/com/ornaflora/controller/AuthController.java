@@ -1,22 +1,27 @@
 package com.ornaflora.controller;
 
+import com.ornaflora.auth.JwtUtil;
 import com.ornaflora.dto.LoginRequest;
 import com.ornaflora.dto.LoginResponse;
 import com.ornaflora.dto.SignupRequest;
 import com.ornaflora.dto.UserDTO;
 import com.ornaflora.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"})
 public class AuthController {
 
     private final UserService userService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -24,10 +29,12 @@ public class AuthController {
             LoginResponse response = userService.login(request);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
+
             LoginResponse errorResponse = LoginResponse.builder()
                     .message("Login failed: " + e.getMessage())
                     .build();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
 
@@ -35,6 +42,17 @@ public class AuthController {
     public ResponseEntity<UserDTO> signup(@RequestBody SignupRequest request) {
         try {
             UserDTO user = userService.signup(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    // New endpoint for admin registration
+    @PostMapping("/admin/register")
+    public ResponseEntity<UserDTO> registerAdmin(@RequestBody SignupRequest request) {
+        try {
+            UserDTO user = userService.signupAdmin(request);
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();

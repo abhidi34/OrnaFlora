@@ -6,6 +6,7 @@ E:\OrnaFlora-backend\src\main\java\com\ornaflora\repository\UserRepository.java
 E:\OrnaFlora-backend\src\main\java\com\ornaflora\controller\CartController.java
 E:\OrnaFlora-backend\src\main\java\com\ornaflora\repository\CartItemRepository.java
 E:\OrnaFlora-backend\src\main\java\com\ornaflora\controller\UserController.java
+E:\OrnaFlora-backend\src\main\java\com\ornaflora\config\WebConfig.java
 E:\OrnaFlora-backend\src\main\java\com\ornaflora\repository\ProductRepository.java
 E:\OrnaFlora-backend\src\main\java\com\ornaflora\dto\SignupRequest.java
 E:\OrnaFlora-backend\src\main\java\com\ornaflora\config\GlobalExceptionHandler.java

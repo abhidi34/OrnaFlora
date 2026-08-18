@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/addresses")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:3001"})
 public class AddressController {
 
     private final AddressService addressService;

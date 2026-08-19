@@ -1,5 +1,6 @@
 package com.ornaflora.controller;
 
+import com.ornaflora.dto.PasswordChangeRequest;
 import com.ornaflora.dto.UserDTO;
 import com.ornaflora.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -73,13 +74,8 @@ public class UserController {
     @PostMapping("/{id}/change-password")
     public ResponseEntity<String> changePassword(
             @PathVariable Long id,
-            @RequestParam String oldPassword,
-            @RequestParam String newPassword) {
-        try {
-            userService.changePassword(id, oldPassword, newPassword);
-            return ResponseEntity.ok("Password changed successfully");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+            @RequestBody PasswordChangeRequest request) {
+        userService.changePassword(id, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok("Password changed successfully");
     }
 }

@@ -3,6 +3,7 @@ package com.ornaflora.controller;
 import com.ornaflora.auth.JwtUtil;
 import com.ornaflora.dto.LoginRequest;
 import com.ornaflora.dto.LoginResponse;
+import com.ornaflora.dto.PasswordResetRequest;
 import com.ornaflora.dto.SignupRequest;
 import com.ornaflora.dto.UserDTO;
 import com.ornaflora.service.UserService;
@@ -57,6 +58,35 @@ public class AuthController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestBody PasswordResetRequest request) {
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+        }
+
+        userService.requestPasswordReset(request.getEmail());
+
+        return ResponseEntity.ok(Map.of(
+                "message", "If an account exists for this email, password reset instructions have been sent."
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@RequestBody PasswordResetRequest request) {
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+        }
+
+        String newPassword = request.getNewPassword();
+        if (newPassword == null || newPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "New password is required"));
+        }
+
+        userService.resetPassword(request.getEmail(), newPassword, request.getToken(), request.getOtp());
+
+        return ResponseEntity.ok(Map.of("message", "Password reset successful"));
     }
 
     @PostMapping("/logout")

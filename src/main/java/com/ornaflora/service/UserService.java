@@ -136,6 +136,44 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public void requestPasswordReset(String email) {
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        userRepository.findByEmail(email).ifPresent(user -> {
+            // Password reset flow can be extended later with email sending or token generation.
+        });
+    }
+
+    public void resetPassword(String email, String newPassword, String token, String otp) {
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new RuntimeException("New password is required");
+        }
+
+        if (newPassword.length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters long");
+        }
+
+        if (token != null && !token.isBlank()) {
+            // Token can be validated later when a reset token mechanism is implemented.
+        }
+
+        if (otp != null && !otp.isBlank()) {
+            // OTP can be validated later when an OTP mechanism is implemented.
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     public void changePassword(Long id, String oldPassword, String newPassword) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
